@@ -1,11 +1,44 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import prisma from "../../../prisma/client";
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const { q: query } = req.query;
-  console.log("AT THE TRAP SPOT", query);
+  if (req.method === "GET") {
+    try {
+      const { q: query } = req.query;
 
-  res.status(200).json({ message: "Hiya Hiya" });
+      if (typeof query !== "string") {
+        throw new Error("Invalid Request");
+      }
+
+      // Search Posts
+      const posts = await prisma.post.findMany({
+        where: {
+          OR: [
+            {
+              body: {
+                contains: query,
+                mode: "insensitive",
+              },
+            },
+            {
+              author: {
+                name: {
+                  contains: query,
+                  mode: "insensitive",
+                },
+              },
+            },
+          ],
+        },
+        include: {
+          author: true,
+        },
+      });
+
+      res.status(200).json({ posts: [] });
+    } catch (error) {}
+  }
 }
