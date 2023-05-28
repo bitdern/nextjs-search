@@ -1,5 +1,6 @@
 "use client";
 
+import { Post, User } from "@prisma/client";
 import { useSearchParams } from "next/navigation";
 import useSWR from "swr";
 
@@ -18,14 +19,23 @@ const SearchPage = () => {
   const searchQuery = search ? search.get("q") : null;
   const encodedSearchQuery = encodeURI(searchQuery || "");
 
-  const { data, isLoading } = useSWR(
+  const { data, isLoading } = useSWR<{ posts: Array<Post & { author: User }> }>(
     `/api/search?q=${encodedSearchQuery}`,
     fetchPosts
   );
 
-  console.log("SEARCH PARAMS", encodedSearchQuery);
+  if (!data?.posts) {
+    return null;
+  }
 
-  return <div>SearchPage</div>;
+  console.log("SEARCH PARAMS", data);
+
+  return;
+  <div>
+    {data.posts.map((post) => (
+      <div>{post.body}</div>
+    ))}
+  </div>;
 };
 
 export default SearchPage;
